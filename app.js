@@ -40,19 +40,6 @@ try {
 		});
 	});
 }
-app.rl.on("line", line => {
-	app.guild = "389448309519024138"; app.channel = "389448309959294988";
-	if (line.startsWith("|")) return;
-	if (line.startsWith("/")) return;
-	if (line === "") {
-		readline.cursorTo(process.stdin, 0);
-		app.rl.write(`| WARNING: You can't send an empty message!\n`);
-		app.rl.prompt();
-		return;
-	}
-	app.user.guilds.get(app.guild).channels.get(app.channel).send(line);
-	app.rl.prompt();
-});
 app.user.on("message", message => {
 	if (message.channel.id !== app.channel || message.guild.id !== app.guild) return;
 	if (message.author.id === app.user.user.id) return;
@@ -62,8 +49,63 @@ app.user.on("message", message => {
 	app.rl.write("\n");
 	app.rl.prompt();
 });
+app.rl.on("line", line => {
+	if (line.startsWith("|")) return;
+	if (line.startsWith("/")) {
+		handleCommand(line);
+		return;
+	}
+	if (line === "") {
+		readline.cursorTo(process.stdin, 0);
+		app.rl.write(`| WARNING: You can't send an empty message!\n`);
+		app.rl.prompt();
+		return;
+	}
+	console.log('sending');
+	app.user.guilds.get(app.guild).channels.get(app.channel).send(line);
+	app.rl.prompt();
+});
 
+function handleCommand(line) {
+	let command = line.split(" ")[0].substring(1);
+	let args = line.split(" ");
+	args.shift();
+	switch(command) {
+		case "channels":
+			let channelnames = app.user.guilds.get(app.guild).channels;
+			channelnames = channelnames.filter(channel => ["dm", "text", "group"].includes(channel.type)).map(channel => channel.name);
+			app.rl.write(`| All channels in ${app.user.guilds.get(app.guild).name}: ${channelnames.join(", ")}\n`);
+			app.rl.prompt();
+			break;
+		case "channel":
+			if (!args[0]) {
+				app.rl.write("| You didn't include a channel name!\n");
+				app.rl.prompt();
+				return;
+			}
+			let channels = app.user.guilds.get(app.guild).channels.filterArray(channel => channel.name.includes(args[0]) && ["dm", "text", "group"].includes(channel.type));
+			if (channels.length === 0) {
+				app.rl.write(`| No channels found with that name\n`);
+			} else if (channels.length > 1) {
+				if (args[1]) {
+					if (channels[Number(args[1] - 1)].id) {
+						app.channel = channels[Number(args[1] - 1)].id;
+						app.rl.write(`| Switched to channel ${app.user.guilds.get(app.guild).channels.get(app.channel).name} in ${app.user.guilds.get(app.guild).name}\n`);
+					} else {
+						app.rl.write(`| No channel found`);
+					}
+				} else {
+					app.rl.write(`| Found multiple channels: ${channels.map((channel, index) => `${index + 1}: ${channel.name}`).join(", ")}. Reply with /channel <search> <number> or try a more specific search.\n`);
+				}
+			} else {
+				app.channel = channels[0].id;
+				app.rl.write(`| Switched to channel ${app.user.guilds.get(app.guild).channels.get(app.channel).name} in ${app.user.guilds.get(app.guild).name}\n`);
+			}
+			app.rl.prompt();
+			break;
+	}
+}
 function errorAndExit(message) {
-	app.rl.write(`| Looks like someone did something wrong! The error message received was ${message}. Quitting...\n`);
+	app.rl.write(`\n| Looks like someone did something wrong! The error message received was ${message}. Quitting...\n`);
 	process.exit();
 }
