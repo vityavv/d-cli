@@ -17,7 +17,7 @@ try {
 		app.guild = app.user.guilds.first().id;
 		app.channel = app.user.guilds.first().channels.first().id;
 		let currnick = app.user.guilds.get(app.guild).me.nickname || null;
-		app.rl._prompt = `> ${currnick ? currnick : app.user.user.username}: `;
+		app.rl._prompt = `> ${currnick || app.user.user.username}: `;
 		app.rl.write(`\n| Dropping you off in #${app.user.guilds.get(app.guild).channels.get(app.channel).name}, in ${app.user.guilds.get(app.guild)}\n`);
 		app.rl.prompt();
 	}).catch(() => {errorAndExit("invalid token")});
@@ -28,7 +28,7 @@ try {
 			app.guild = app.user.guilds.first().id;
 			app.channel = app.user.guilds.first().channels.first().id;
 			let currnick = app.user.guilds.get(app.guild).me.nickname || null;
-			app.rl._prompt = `> ${currnick ? currnick : app.user.user.username}: `;
+			app.rl._prompt = `> ${currnick || app.user.user.username}: `;
 			app.rl.write(`\n| Dropping you off in #${app.user.guilds.get(app.guild).channels.get(app.channel).name}, in ${app.user.guilds.get(app.guild)}\n`);
 			app.rl.prompt();
 		}).catch(() => {errorAndExit("invalid token")});
@@ -57,7 +57,7 @@ app.user.on("message", message => {
 	if (message.channel.id !== app.channel || message.guild.id !== app.guild) return;
 	if (message.author.id === app.user.user.id) return;
 	readline.cursorTo(process.stdin, 0);
-	app.rl.write(`| ${message.member.nickname ? message.member.nickname : message.author.username}: `);
+	app.rl.write(`| ${message.member.nickname || message.author.username}: `);
 	app.rl.write(message.content.split("\n").join("\n| >>> "));
 	app.rl.write("\n");
 	app.rl.prompt();
