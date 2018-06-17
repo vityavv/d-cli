@@ -44,6 +44,7 @@ app.user.on("message", message => {
 	if (message.channel.id !== app.channel || message.guild.id !== app.guild) return;
 	if (message.author.id === app.user.user.id) return;
 	readline.cursorTo(process.stdin, 0);
+	readline.
 	app.rl.write(`| ${message.member.nickname || message.author.username}: `);
 	app.rl.write(message.content.split("\n").join("\n| >>> "));
 	app.rl.write("\n");
@@ -61,7 +62,6 @@ app.rl.on("line", line => {
 		app.rl.prompt();
 		return;
 	}
-	console.log('sending');
 	app.user.guilds.get(app.guild).channels.get(app.channel).send(line);
 	app.rl.prompt();
 });
@@ -91,6 +91,13 @@ function handleCommand(line) {
 					if (channels[Number(args[1] - 1)].id) {
 						app.channel = channels[Number(args[1] - 1)].id;
 						app.rl.write(`| Switched to channel ${app.user.guilds.get(app.guild).channels.get(app.channel).name} in ${app.user.guilds.get(app.guild).name}\n`);
+app.user.guilds.get(app.guild).channels.get(app.channel).fetchMessages({limit: 10}).then(messages => {
+messages.forEach(message => {
+app.rl.write(`| ${message.member.nickname || message.author.username}: `);
+app.rl.write(message.content.split("\n").join("\n| >>> "));
+app.rl.write("\n");
+});
+});
 					} else {
 						app.rl.write(`| No channel found`);
 					}
@@ -100,6 +107,46 @@ function handleCommand(line) {
 			} else {
 				app.channel = channels[0].id;
 				app.rl.write(`| Switched to channel ${app.user.guilds.get(app.guild).channels.get(app.channel).name} in ${app.user.guilds.get(app.guild).name}\n`);
+app.user.guilds.get(app.guild).channels.get(app.channel).fetchMessages({limit: 10}).then(messages => {
+messages.forEach(message => {
+app.rl.write(`| ${message.member.nickname || message.author.username}: `);
+app.rl.write(message.content.split("\n").join("\n| >>> "));
+app.rl.write("\n");
+});
+});
+			}
+			app.rl.prompt();
+			break;
+		case "servers":
+		case "guilds":
+			let guildnames = app.user.guilds.map(guild => guild.name);
+			app.rl.write(`| All of the guilds that you are in: ${guildnames.join(", ")}\n`);
+			app.rl.prompt();
+			break;
+		case "guild":
+		case "server":
+			if (!args[0]) {
+				app.rl.write("| You didn't include a guild name!\n");
+				app.rl.prompt();
+				return;
+			}
+			let guilds = app.user.guilds.filterArray(guild => guild.name.includes(args[0]));
+			if (guilds.length === 0) {
+				app.rl.write(`| No guilds found with that name\n`);
+			} else if (guilds.length > 1) {
+				if (args[1]) {
+					if (guilds[Number(args[1] - 1)].id) {
+						app.guild = guilds[Number(args[1] - 1)].id;
+						app.rl.write(`| Switched to guild ${app.user.guilds.get(app.guild).name}\n`);
+					} else {
+						app.rl.write(`| No guild found`);
+					}
+				} else {
+					app.rl.write(`| Found multiple guilds: ${channels.map((guild, index) => `${index + 1}: ${guild.name}`).join(", ")}. Reply with /guild <search> <number> or try a more specific search.\n`);
+				}
+			} else {
+				app.guild = guilds[0].id;
+				app.rl.write(`| Switched to guild ${app.user.guilds.get(app.guild).name}\n`);
 			}
 			app.rl.prompt();
 			break;
